@@ -1,1 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎵 Music Release Helper</title>
+  <style>
+    :root {
+      --bg-1: #0b1020;
+      --bg-2: #1c1230;
+      --glass: rgba(22, 28, 45, 0.55);
+      --glass-border: rgba(255, 255, 255, 0.16);
+      --text: #ebefff;
+      --muted: #b8c0df;
+      --accent: #7c5cff;
+      --accent-2: #21d4fd;
+      --success: #35d07f;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
 
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 12% 8%, #2c1f53 0%, transparent 40%),
+                  radial-gradient(circle at 88% 0%, #15364f 0%, transparent 36%),
+                  linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      min-height: 100%;
+    }
+
+    .app {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 28px 16px 48px;
+    }
+
+    .header {
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.5rem, 4vw, 2.4rem);
+      letter-spacing: 0.01em;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 10px 26px var(--shadow);
+    }
+
+    .input-card {
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #dfe6ff;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      background: rgba(8, 12, 26, 0.7);
+      color: var(--text);
+      padding: 10px 12px;
+      font: inherit;
+      outline: none;
+      transition: border-color .2s ease, transform .2s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent-2);
+      transform: translateY(-1px);
+    }
+
+    .actions {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn {
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f8f9ff;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.28);
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .btn.primary {
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+    }
+
+    .btn.copy-all {
+      border: none;
+      background: linear-gradient(135deg, #2aa16e, var(--success));
+      color: #042312;
+    }
+
+    .loading {
+      margin-top: 14px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .loading.active { display: flex; }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .output-wrap {
+      display: none;
+      gap: 12px;
+      grid-template-columns: 1fr;
+    }
+
+    .output-wrap.visible {
+      display: grid;
+      animation: fadeIn .45s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-card { padding: 14px; }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .result-title {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .result-content {
+      margin: 0;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      color: #f1f4ff;
+      font-size: 0.95rem;
+    }
+
+    .titles-list {
+      margin: 0;
+      padding-left: 22px;
+      line-height: 1.8;
+    }
+
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background: rgba(6, 16, 25, 0.92);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #e9f7ff;
+      border-radius: 10px;
+      padding: 10px 14px;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: all .25s ease;
+      font-size: .92rem;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 640px) {
+      .app { padding: 20px 12px 36px; }
+      .btn { width: 100%; }
+      .result-header { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <h1>🎵 Music Release Helper</h1>
+      <p class="subtitle">Generate titles, cover prompts, and release content instantly.</p>
+    </header>
+
+    <section class="card input-card">
+      <div class="form-grid">
+        <div>
+          <label for="songName">Song Name</label>
+          <input id="songName" type="text" placeholder="e.g. Neon Drifter" />
+        </div>
+        <div>
+          <label for="mood">Mood / Vibe</label>
+          <input id="mood" type="text" placeholder="e.g. nostalgic, uplifting" />
+        </div>
+        <div>
+          <label for="genre">Genre</label>
+          <select id="genre">
+            <option value="Pop">Pop</option>
+            <option value="Hip-Hop">Hip-Hop</option>
+            <option value="Lo-fi">Lo-fi</option>
+            <option value="EDM">EDM</option>
+            <option value="Cinematic">Cinematic</option>
+          </select>
+        </div>
+        <div>
+          <label for="platform">Platform</label>
+          <select id="platform">
+            <option value="YouTube">YouTube</option>
+            <option value="TikTok">TikTok</option>
+          </select>
+        </div>
+        <div>
+          <label for="bpm">BPM (Optional)</label>
+          <input id="bpm" type="number" min="50" max="220" placeholder="e.g. 128" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="generateBtn" type="button">Generate</button>
+        <button class="btn copy-all" id="copyAllBtn" type="button">Copy All</button>
+      </div>
+
+      <div class="loading" id="loadingState">
+        <div class="spinner"></div>
+        <span>Crafting your release assets...</span>
+      </div>
+    </section>
+
+    <section class="output-wrap" id="outputWrap">
+      <article class="card result-card">
+        <div class="result-header">
+          <h2 class="result-title">Title Suggestions</h2>
+          <button class="btn" data-copy-target="titles">Copy</button>
+        </div>
+        <ol class="titles-list" id="titles"></ol>
+      </article>
+
+      <article class="card result-card">
+        <div class="result-header">
+          <h2 class="result-title">Cover Prompt</h2>
+          <button class="btn" data-copy-target="coverPrompt">Copy</button>
+        </div>
+        <p class="result-content" id="coverPrompt"></p>
+      </article>
+
+      <article class="card result-card">
+        <div class="result-header">
+          <h2 class="result-title">YouTube Description</h2>
+          <button class="btn" data-copy-target="youtubeDescription">Copy</button>
+        </div>
+        <p class="result-content" id="youtubeDescription"></p>
+      </article>
+
+      <article class="card result-card">
+        <div class="result-header">
+          <h2 class="result-title">TikTok Caption</h2>
+          <button class="btn" data-copy-target="tiktokCaption">Copy</button>
+        </div>
+        <p class="result-content" id="tiktokCaption"></p>
+      </article>
+
+      <article class="card result-card">
+        <div class="result-header">
+          <h2 class="result-title">Timeline Plan</h2>
+          <button class="btn" data-copy-target="timelinePlan">Copy</button>
+        </div>
+        <p class="result-content" id="timelinePlan"></p>
+      </article>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const genreHashtagMap = {
+      "Pop": ["#PopMusic", "#NewPop", "#PopVibes"],
+      "Hip-Hop": ["#HipHop", "#RapMusic", "#Bars"],
+      "Lo-fi": ["#LofiBeats", "#ChillVibes", "#StudyMusic"],
+      "EDM": ["#EDM", "#DanceMusic", "#FestivalVibes"],
+      "Cinematic": ["#CinematicMusic", "#EpicSound", "#FilmScore"]
+    };
+
+    const moodPaletteMap = {
+      calm: "soft volumetric light, smooth gradients, airy atmosphere",
+      nostalgic: "film grain, warm highlights, vintage textures",
+      uplifting: "golden-hour rays, vibrant accents, hopeful composition",
+      dark: "deep shadows, dramatic contrast, moody haze",
+      energetic: "kinetic motion blur, punchy neon, dynamic perspective"
+    };
+
+    const state = { result: null };
+
+    const byId = (id) => document.getElementById(id);
+
+    function capWords(text) {
+      return text
+        .split(" ")
+        .filter(Boolean)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ");
+    }
+
+    function firstMoodStyle(mood) {
+      const lowerMood = mood.toLowerCase();
+      const key = Object.keys(moodPaletteMap).find((item) => lowerMood.includes(item));
+      return moodPaletteMap[key] || "cinematic lighting, crisp details, modern album aesthetic";
+    }
+
+    function buildTitles(song, mood, genre) {
+      const s = capWords(song);
+      const descriptor = mood.trim() ? capWords(mood) : "Signature";
+      return [
+        `${s} (${descriptor} Cut)`,
+        `${s} — After Hours`,
+        `${descriptor} Echoes`,
+        `${s} | ${genre} Mix`,
+        `When ${s} Hits`
+      ];
+    }
+
+    function buildCoverPrompt(song, mood, genre) {
+      const style = firstMoodStyle(mood);
+      return `Album cover for "${song}", ${genre} genre, ${mood} mood, centered subject, premium art direction, ${style}, layered depth, subtle glow, professional typography-safe space, ultra-detailed, 1:1 composition, Midjourney / Stable Diffusion optimized, no watermark, no gibberish text.`;
+    }
+
+    function buildYoutubeDescription(song, mood, genre, hashtags) {
+      return `"${song}" is finally here. This ${genre} release blends a ${mood} vibe with memorable hooks and replay-worthy energy.
+
+If this track connects with you, drop a comment with your favorite moment, share it with your crew, and subscribe for upcoming releases.
+
+${hashtags.join(" ")}`;
+    }
+
+    function buildTikTokCaption(song, mood, hashtags) {
+      return `New drop: "${song}" 🎧 ${mood} energy all the way. Which part should I turn into the challenge clip first? 👀 ${hashtags.slice(0, 4).join(" ")}`;
+    }
+
+    function buildTimelinePlan(song, bpm) {
+      if (!bpm || Number.isNaN(Number(bpm))) {
+        return [
+          `Intro (0:00-0:15): atmosphere + motif from "${song}"`,
+          "Verse (0:15-0:45): main narrative and rhythm setup",
+          "Hook (0:45-1:10): strongest melodic payoff",
+          "Bridge (1:10-1:30): contrast section with texture change",
+          "Outro (1:30-1:50): callback and clean landing"
+        ].join("\n");
+      }
+
+      const beatSec = 60 / Number(bpm);
+      const block = (beats) => (beats * beatSec).toFixed(1);
+      const intro = block(16);
+      const verse = block(32);
+      const hook = block(16);
+      const bridge = block(16);
+      const outro = block(16);
+      const total = (Number(intro) + Number(verse) + Number(hook) + Number(bridge) + Number(outro)).toFixed(1);
+
+      return [
+        `Intro (~${intro}s | 16 beats): hook preview + atmosphere`,
+        `Verse (~${verse}s | 32 beats): story and groove development`,
+        `Hook (~${hook}s | 16 beats): main chant / melody focus`,
+        `Bridge (~${bridge}s | 16 beats): tension lift or drop`,
+        `Outro (~${outro}s | 16 beats): final phrase and tail`,
+        `Estimated total: ~${total}s at ${bpm} BPM`
+      ].join("\n");
+    }
+
+    function buildHashtags(genre, platform) {
+      const base = ["#NewMusic", "#MusicRelease", "#IndieArtist", platform === "YouTube" ? "#YouTubeMusic" : "#TikTokMusic"];
+      return [...base, ...(genreHashtagMap[genre] || [])];
+    }
+
+    function generateReleasePack({ song, mood, genre, platform, bpm }) {
+      const hashtags = buildHashtags(genre, platform);
+      const titles = buildTitles(song, mood, genre);
+      return {
+        titles,
+        coverPrompt: buildCoverPrompt(song, mood, genre),
+        youtubeDescription: buildYoutubeDescription(song, mood, genre, hashtags),
+        tiktokCaption: buildTikTokCaption(song, mood, hashtags),
+        timelinePlan: buildTimelinePlan(song, bpm),
+        allText: [
+          "Title Suggestions:",
+          ...titles.map((t, i) => `${i + 1}. ${t}`),
+          "",
+          "Cover Prompt:",
+          buildCoverPrompt(song, mood, genre),
+          "",
+          "YouTube Description:",
+          buildYoutubeDescription(song, mood, genre, hashtags),
+          "",
+          "TikTok Caption:",
+          buildTikTokCaption(song, mood, hashtags),
+          "",
+          "Timeline Plan:",
+          buildTimelinePlan(song, bpm)
+        ].join("\n")
+      };
+    }
+
+    function showToast(message) {
+      const toast = byId("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1700);
+    }
+
+    async function copyText(text) {
+      if (!text) {
+        showToast("Nothing to copy yet.");
+        return;
+      }
+      await navigator.clipboard.writeText(text);
+      showToast("Copied successfully.");
+    }
+
+    function renderResult(result) {
+      const titlesEl = byId("titles");
+      titlesEl.innerHTML = "";
+      result.titles.forEach((title) => {
+        const li = document.createElement("li");
+        li.textContent = title;
+        titlesEl.appendChild(li);
+      });
+
+      byId("coverPrompt").textContent = result.coverPrompt;
+      byId("youtubeDescription").textContent = result.youtubeDescription;
+      byId("tiktokCaption").textContent = result.tiktokCaption;
+      byId("timelinePlan").textContent = result.timelinePlan;
+
+      byId("outputWrap").classList.add("visible");
+    }
+
+    function getInputValues() {
+      return {
+        song: byId("songName").value.trim(),
+        mood: byId("mood").value.trim(),
+        genre: byId("genre").value,
+        platform: byId("platform").value,
+        bpm: byId("bpm").value.trim()
+      };
+    }
+
+    function validateInput({ song, mood }) {
+      if (!song || !mood) {
+        showToast("Please fill Song Name and Mood / Vibe.");
+        return false;
+      }
+      return true;
+    }
+
+    byId("generateBtn").addEventListener("click", () => {
+      const data = getInputValues();
+      if (!validateInput(data)) return;
+
+      const loading = byId("loadingState");
+      loading.classList.add("active");
+
+      setTimeout(() => {
+        state.result = generateReleasePack(data);
+        loading.classList.remove("active");
+        renderResult(state.result);
+      }, 1000);
+    });
+
+    document.querySelectorAll("[data-copy-target]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (!state.result) {
+          showToast("Generate content first.");
+          return;
+        }
+        const key = btn.getAttribute("data-copy-target");
+        const textMap = {
+          titles: state.result.titles.map((t, i) => `${i + 1}. ${t}`).join("\n"),
+          coverPrompt: state.result.coverPrompt,
+          youtubeDescription: state.result.youtubeDescription,
+          tiktokCaption: state.result.tiktokCaption,
+          timelinePlan: state.result.timelinePlan
+        };
+        await copyText(textMap[key]);
+      });
+    });
+
+    byId("copyAllBtn").addEventListener("click", async () => {
+      if (!state.result) {
+        showToast("Generate content first.");
+        return;
+      }
+      await copyText(state.result.allText);
+    });
+  </script>
+</body>
+</html>
