@@ -1,1 +1,32 @@
 
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Music Helper</title>
+</head>
+<body>
+
+  <h1>🎵 Music Release Helper</h1>
+
+  <input type="text" id="songName" placeholder="Song name">
+  <input type="text" id="mood" placeholder="Mood / Vibe">
+
+  <button onclick="generate()">Generate</button>
+
+  <div id="result"></div>
+
+  <script>
+    function generate() {
+      const song = document.getElementById("songName").value;
+      const mood = document.getElementById("mood").value;
+
+      const title = song + " - " + mood + " Edition";
+
+      document.getElementById("result").innerHTML =
+        "<h3>Generated Title:</h3>" +
+        "<p>" + title + "</p>";
+    }
+  </script>
+
+</body>
+</html>
