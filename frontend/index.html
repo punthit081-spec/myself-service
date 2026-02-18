@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF Generator Form</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Generate Fillable PDF</h1>
+      <p>กรอกข้อมูล แล้วระบบจะเติม PDF + สร้าง QR code ให้อัตโนมัติ</p>
+
+      <form id="pdfForm" class="card">
+        <label>Full name <input name="fullName" required /></label>
+        <label>Email <input name="email" type="email" required /></label>
+        <label>Employee ID <input name="employeeId" required /></label>
+        <label>Department <input name="department" required /></label>
+        <label>Issue Date <input name="issueDate" type="date" required /></label>
+
+        <button type="submit">Generate & Download PDF</button>
+      </form>
+
+      <section id="result" class="card hidden"></section>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
