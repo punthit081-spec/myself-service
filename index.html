@@ -1,548 +1,470 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🎵 Music Release Helper</title>
-  <style>
-    :root {
-      --bg-1: #0b1020;
-      --bg-2: #1c1230;
-      --glass: rgba(22, 28, 45, 0.55);
-      --glass-border: rgba(255, 255, 255, 0.16);
-      --text: #ebefff;
-      --muted: #b8c0df;
-      --accent: #7c5cff;
-      --accent-2: #21d4fd;
-      --success: #35d07f;
-      --shadow: rgba(0, 0, 0, 0.35);
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      color: var(--text);
-      background: radial-gradient(circle at 12% 8%, #2c1f53 0%, transparent 40%),
-                  radial-gradient(circle at 88% 0%, #15364f 0%, transparent 36%),
-                  linear-gradient(135deg, var(--bg-1), var(--bg-2));
-      min-height: 100%;
-    }
-
-    .app {
-      max-width: 1080px;
-      margin: 0 auto;
-      padding: 28px 16px 48px;
-    }
-
-    .header {
-      margin-bottom: 18px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(1.5rem, 4vw, 2.4rem);
-      letter-spacing: 0.01em;
-    }
-
-    .subtitle {
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 1rem;
-    }
-
-    .card {
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 10px 26px var(--shadow);
-    }
-
-    .input-card {
-      padding: 18px;
-      margin-bottom: 18px;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px;
-    }
-
-    label {
-      display: block;
-      font-size: 0.9rem;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: #dfe6ff;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 10px;
-      background: rgba(8, 12, 26, 0.7);
-      color: var(--text);
-      padding: 10px 12px;
-      font: inherit;
-      outline: none;
-      transition: border-color .2s ease, transform .2s ease;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--accent-2);
-      transform: translateY(-1px);
-    }
-
-    .actions {
-      margin-top: 16px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .btn {
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #f8f9ff;
-      background: rgba(255, 255, 255, 0.08);
-      padding: 10px 14px;
-      border-radius: 999px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.28);
-      background: rgba(255, 255, 255, 0.14);
-    }
-
-    .btn.primary {
-      border: none;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      color: #fff;
-    }
-
-    .btn.copy-all {
-      border: none;
-      background: linear-gradient(135deg, #2aa16e, var(--success));
-      color: #042312;
-    }
-
-    .loading {
-      margin-top: 14px;
-      display: none;
-      align-items: center;
-      gap: 10px;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    .loading.active { display: flex; }
-
-    .spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255,255,255,.2);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .output-wrap {
-      display: none;
-      gap: 12px;
-      grid-template-columns: 1fr;
-    }
-
-    .output-wrap.visible {
-      display: grid;
-      animation: fadeIn .45s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .result-card { padding: 14px; }
-
-    .result-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .result-title {
-      margin: 0;
-      font-size: 1rem;
-    }
-
-    .result-content {
-      margin: 0;
-      white-space: pre-wrap;
-      line-height: 1.6;
-      color: #f1f4ff;
-      font-size: 0.95rem;
-    }
-
-    .titles-list {
-      margin: 0;
-      padding-left: 22px;
-      line-height: 1.8;
-    }
-
-    .toast {
-      position: fixed;
-      right: 16px;
-      bottom: 16px;
-      background: rgba(6, 16, 25, 0.92);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: #e9f7ff;
-      border-radius: 10px;
-      padding: 10px 14px;
-      opacity: 0;
-      transform: translateY(10px);
-      pointer-events: none;
-      transition: all .25s ease;
-      font-size: .92rem;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    @media (max-width: 640px) {
-      .app { padding: 20px 12px 36px; }
-      .btn { width: 100%; }
-      .result-header { align-items: flex-start; flex-direction: column; }
-    }
-  </style>
-</head>
-<body>
-  <main class="app">
-    <header class="header">
-      <h1>🎵 Music Release Helper</h1>
-      <p class="subtitle">Generate titles, cover prompts, and release content instantly.</p>
-    </header>
-
-    <section class="card input-card">
-      <div class="form-grid">
-        <div>
-          <label for="songName">Song Name</label>
-          <input id="songName" type="text" placeholder="e.g. Neon Drifter" />
-        </div>
-        <div>
-          <label for="mood">Mood / Vibe</label>
-          <input id="mood" type="text" placeholder="e.g. nostalgic, uplifting" />
-        </div>
-        <div>
-          <label for="genre">Genre</label>
-          <select id="genre">
-            <option value="Pop">Pop</option>
-            <option value="Hip-Hop">Hip-Hop</option>
-            <option value="Lo-fi">Lo-fi</option>
-            <option value="EDM">EDM</option>
-            <option value="Cinematic">Cinematic</option>
-          </select>
-        </div>
-        <div>
-          <label for="platform">Platform</label>
-          <select id="platform">
-            <option value="YouTube">YouTube</option>
-            <option value="TikTok">TikTok</option>
-          </select>
-        </div>
-        <div>
-          <label for="bpm">BPM (Optional)</label>
-          <input id="bpm" type="number" min="50" max="220" placeholder="e.g. 128" />
-        </div>
-      </div>
-
-      <div class="actions">
-        <button class="btn primary" id="generateBtn" type="button">Generate</button>
-        <button class="btn copy-all" id="copyAllBtn" type="button">Copy All</button>
-      </div>
-
-      <div class="loading" id="loadingState">
-        <div class="spinner"></div>
-        <span>Crafting your release assets...</span>
-      </div>
-    </section>
-
-    <section class="output-wrap" id="outputWrap">
-      <article class="card result-card">
-        <div class="result-header">
-          <h2 class="result-title">Title Suggestions</h2>
-          <button class="btn" data-copy-target="titles">Copy</button>
-        </div>
-        <ol class="titles-list" id="titles"></ol>
-      </article>
-
-      <article class="card result-card">
-        <div class="result-header">
-          <h2 class="result-title">Cover Prompt</h2>
-          <button class="btn" data-copy-target="coverPrompt">Copy</button>
-        </div>
-        <p class="result-content" id="coverPrompt"></p>
-      </article>
-
-      <article class="card result-card">
-        <div class="result-header">
-          <h2 class="result-title">YouTube Description</h2>
-          <button class="btn" data-copy-target="youtubeDescription">Copy</button>
-        </div>
-        <p class="result-content" id="youtubeDescription"></p>
-      </article>
-
-      <article class="card result-card">
-        <div class="result-header">
-          <h2 class="result-title">TikTok Caption</h2>
-          <button class="btn" data-copy-target="tiktokCaption">Copy</button>
-        </div>
-        <p class="result-content" id="tiktokCaption"></p>
-      </article>
-
-      <article class="card result-card">
-        <div class="result-header">
-          <h2 class="result-title">Timeline Plan</h2>
-          <button class="btn" data-copy-target="timelinePlan">Copy</button>
-        </div>
-        <p class="result-content" id="timelinePlan"></p>
-      </article>
-    </section>
-  </main>
-
-  <div class="toast" id="toast"></div>
-
-  <script>
-    const genreHashtagMap = {
-      "Pop": ["#PopMusic", "#NewPop", "#PopVibes"],
-      "Hip-Hop": ["#HipHop", "#RapMusic", "#Bars"],
-      "Lo-fi": ["#LofiBeats", "#ChillVibes", "#StudyMusic"],
-      "EDM": ["#EDM", "#DanceMusic", "#FestivalVibes"],
-      "Cinematic": ["#CinematicMusic", "#EpicSound", "#FilmScore"]
-    };
-
-    const moodPaletteMap = {
-      calm: "soft volumetric light, smooth gradients, airy atmosphere",
-      nostalgic: "film grain, warm highlights, vintage textures",
-      uplifting: "golden-hour rays, vibrant accents, hopeful composition",
-      dark: "deep shadows, dramatic contrast, moody haze",
-      energetic: "kinetic motion blur, punchy neon, dynamic perspective"
-    };
-
-    const state = { result: null };
-
-    const byId = (id) => document.getElementById(id);
-
-    function capWords(text) {
-      return text
-        .split(" ")
-        .filter(Boolean)
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-        .join(" ");
-    }
-
-    function firstMoodStyle(mood) {
-      const lowerMood = mood.toLowerCase();
-      const key = Object.keys(moodPaletteMap).find((item) => lowerMood.includes(item));
-      return moodPaletteMap[key] || "cinematic lighting, crisp details, modern album aesthetic";
-    }
-
-    function buildTitles(song, mood, genre) {
-      const s = capWords(song);
-      const descriptor = mood.trim() ? capWords(mood) : "Signature";
-      return [
-        `${s} (${descriptor} Cut)`,
-        `${s} — After Hours`,
-        `${descriptor} Echoes`,
-        `${s} | ${genre} Mix`,
-        `When ${s} Hits`
-      ];
-    }
-
-    function buildCoverPrompt(song, mood, genre) {
-      const style = firstMoodStyle(mood);
-      return `Album cover for "${song}", ${genre} genre, ${mood} mood, centered subject, premium art direction, ${style}, layered depth, subtle glow, professional typography-safe space, ultra-detailed, 1:1 composition, Midjourney / Stable Diffusion optimized, no watermark, no gibberish text.`;
-    }
-
-    function buildYoutubeDescription(song, mood, genre, hashtags) {
-      return `"${song}" is finally here. This ${genre} release blends a ${mood} vibe with memorable hooks and replay-worthy energy.
-
-If this track connects with you, drop a comment with your favorite moment, share it with your crew, and subscribe for upcoming releases.
-
-${hashtags.join(" ")}`;
-    }
-
-    function buildTikTokCaption(song, mood, hashtags) {
-      return `New drop: "${song}" 🎧 ${mood} energy all the way. Which part should I turn into the challenge clip first? 👀 ${hashtags.slice(0, 4).join(" ")}`;
-    }
-
-    function buildTimelinePlan(song, bpm) {
-      if (!bpm || Number.isNaN(Number(bpm))) {
-        return [
-          `Intro (0:00-0:15): atmosphere + motif from "${song}"`,
-          "Verse (0:15-0:45): main narrative and rhythm setup",
-          "Hook (0:45-1:10): strongest melodic payoff",
-          "Bridge (1:10-1:30): contrast section with texture change",
-          "Outro (1:30-1:50): callback and clean landing"
-        ].join("\n");
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document PDF Generator</title>
+    <meta
+      name="description"
+      content="Generate professional PDF documents with QR verification in your browser."
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f3f6fb;
+        --surface: #ffffff;
+        --text: #0f172a;
+        --muted: #475569;
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --border: #dbe4f0;
+        --success: #0f766e;
+        --radius: 16px;
+        --shadow: 0 20px 35px -24px rgba(15, 23, 42, 0.35);
       }
 
-      const beatSec = 60 / Number(bpm);
-      const block = (beats) => (beats * beatSec).toFixed(1);
-      const intro = block(16);
-      const verse = block(32);
-      const hook = block(16);
-      const bridge = block(16);
-      const outro = block(16);
-      const total = (Number(intro) + Number(verse) + Number(hook) + Number(bridge) + Number(outro)).toFixed(1);
-
-      return [
-        `Intro (~${intro}s | 16 beats): hook preview + atmosphere`,
-        `Verse (~${verse}s | 32 beats): story and groove development`,
-        `Hook (~${hook}s | 16 beats): main chant / melody focus`,
-        `Bridge (~${bridge}s | 16 beats): tension lift or drop`,
-        `Outro (~${outro}s | 16 beats): final phrase and tail`,
-        `Estimated total: ~${total}s at ${bpm} BPM`
-      ].join("\n");
-    }
-
-    function buildHashtags(genre, platform) {
-      const base = ["#NewMusic", "#MusicRelease", "#IndieArtist", platform === "YouTube" ? "#YouTubeMusic" : "#TikTokMusic"];
-      return [...base, ...(genreHashtagMap[genre] || [])];
-    }
-
-    function generateReleasePack({ song, mood, genre, platform, bpm }) {
-      const hashtags = buildHashtags(genre, platform);
-      const titles = buildTitles(song, mood, genre);
-      return {
-        titles,
-        coverPrompt: buildCoverPrompt(song, mood, genre),
-        youtubeDescription: buildYoutubeDescription(song, mood, genre, hashtags),
-        tiktokCaption: buildTikTokCaption(song, mood, hashtags),
-        timelinePlan: buildTimelinePlan(song, bpm),
-        allText: [
-          "Title Suggestions:",
-          ...titles.map((t, i) => `${i + 1}. ${t}`),
-          "",
-          "Cover Prompt:",
-          buildCoverPrompt(song, mood, genre),
-          "",
-          "YouTube Description:",
-          buildYoutubeDescription(song, mood, genre, hashtags),
-          "",
-          "TikTok Caption:",
-          buildTikTokCaption(song, mood, hashtags),
-          "",
-          "Timeline Plan:",
-          buildTimelinePlan(song, bpm)
-        ].join("\n")
-      };
-    }
-
-    function showToast(message) {
-      const toast = byId("toast");
-      toast.textContent = message;
-      toast.classList.add("show");
-      clearTimeout(showToast.timer);
-      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1700);
-    }
-
-    async function copyText(text) {
-      if (!text) {
-        showToast("Nothing to copy yet.");
-        return;
+      * {
+        box-sizing: border-box;
       }
-      await navigator.clipboard.writeText(text);
-      showToast("Copied successfully.");
-    }
 
-    function renderResult(result) {
-      const titlesEl = byId("titles");
-      titlesEl.innerHTML = "";
-      result.titles.forEach((title) => {
-        const li = document.createElement("li");
-        li.textContent = title;
-        titlesEl.appendChild(li);
-      });
-
-      byId("coverPrompt").textContent = result.coverPrompt;
-      byId("youtubeDescription").textContent = result.youtubeDescription;
-      byId("tiktokCaption").textContent = result.tiktokCaption;
-      byId("timelinePlan").textContent = result.timelinePlan;
-
-      byId("outputWrap").classList.add("visible");
-    }
-
-    function getInputValues() {
-      return {
-        song: byId("songName").value.trim(),
-        mood: byId("mood").value.trim(),
-        genre: byId("genre").value,
-        platform: byId("platform").value,
-        bpm: byId("bpm").value.trim()
-      };
-    }
-
-    function validateInput({ song, mood }) {
-      if (!song || !mood) {
-        showToast("Please fill Song Name and Mood / Vibe.");
-        return false;
+      body {
+        margin: 0;
+        font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color: var(--text);
+        background: radial-gradient(circle at top right, #dbeafe, transparent 50%), var(--bg);
+        min-height: 100vh;
       }
-      return true;
-    }
 
-    byId("generateBtn").addEventListener("click", () => {
-      const data = getInputValues();
-      if (!validateInput(data)) return;
+      .wrapper {
+        width: min(1100px, 100% - 2rem);
+        margin: 2.5rem auto;
+        display: grid;
+        gap: 1.25rem;
+      }
 
-      const loading = byId("loadingState");
-      loading.classList.add("active");
+      .hero {
+        text-align: center;
+        padding: 1rem;
+      }
 
-      setTimeout(() => {
-        state.result = generateReleasePack(data);
-        loading.classList.remove("active");
-        renderResult(state.result);
-      }, 1000);
-    });
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 3vw, 2.4rem);
+        letter-spacing: -0.02em;
+      }
 
-    document.querySelectorAll("[data-copy-target]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        if (!state.result) {
-          showToast("Generate content first.");
-          return;
+      .hero p {
+        color: var(--muted);
+        margin: 0.7rem auto 0;
+        max-width: 700px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 1.25rem;
+      }
+
+      form {
+        display: grid;
+        gap: 0.95rem;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.9rem;
+      }
+
+      label {
+        display: grid;
+        gap: 0.4rem;
+        font-size: 0.94rem;
+        font-weight: 600;
+      }
+
+      input {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 0.75rem 0.85rem;
+        font-size: 1rem;
+        color: var(--text);
+        outline: none;
+        transition: border-color 0.18s, box-shadow 0.18s;
+      }
+
+      input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+      }
+
+      .hint {
+        font-size: 0.84rem;
+        color: var(--muted);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+        margin-top: 0.25rem;
+      }
+
+      button,
+      .download-link {
+        appearance: none;
+        border: 0;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        font-size: 0.97rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        transition: transform 0.15s ease, background 0.2s ease, opacity 0.2s ease;
+      }
+
+      button {
+        background: var(--primary);
+        color: #fff;
+      }
+
+      button:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.65;
+        transform: none;
+      }
+
+      .download-link {
+        background: #0f766e;
+        color: #fff;
+        pointer-events: none;
+        opacity: 0.55;
+      }
+
+      .download-link.ready {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .status {
+        margin: 0;
+        min-height: 1.4em;
+        font-size: 0.93rem;
+        color: var(--muted);
+      }
+
+      .status.success {
+        color: var(--success);
+      }
+
+      .status.error {
+        color: #b91c1c;
+      }
+
+      .preview-frame {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        min-height: 68vh;
+        background: #f8fafc;
+      }
+
+      .meta {
+        display: grid;
+        gap: 0.25rem;
+        font-size: 0.9rem;
+        color: #334155;
+      }
+
+      code {
+        background: #eff6ff;
+        border: 1px solid #dbeafe;
+        border-radius: 8px;
+        padding: 0.1rem 0.35rem;
+      }
+
+      @media (min-width: 900px) {
+        .grid {
+          grid-template-columns: 390px 1fr;
+          align-items: start;
         }
-        const key = btn.getAttribute("data-copy-target");
-        const textMap = {
-          titles: state.result.titles.map((t, i) => `${i + 1}. ${t}`).join("\n"),
-          coverPrompt: state.result.coverPrompt,
-          youtubeDescription: state.result.youtubeDescription,
-          tiktokCaption: state.result.tiktokCaption,
-          timelinePlan: state.result.timelinePlan
-        };
-        await copyText(textMap[key]);
-      });
-    });
 
-    byId("copyAllBtn").addEventListener("click", async () => {
-      if (!state.result) {
-        showToast("Generate content first.");
-        return;
+        .row {
+          grid-template-columns: 1fr 1fr;
+        }
       }
-      await copyText(state.result.allText);
-    });
-  </script>
-</body>
+    </style>
+  </head>
+  <body>
+    <main class="wrapper">
+      <section class="hero">
+        <h1>PDF Document Generator</h1>
+        <p>
+          Create polished A4 documents in your browser with an embedded QR verification link.
+          Fill in the form, preview instantly, then download your PDF.
+        </p>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <form id="docForm" novalidate>
+            <label>
+              Full Name
+              <input id="fullName" name="fullName" type="text" autocomplete="name" required />
+            </label>
+
+            <div class="row">
+              <label>
+                Age
+                <input id="age" name="age" type="number" min="1" max="120" required />
+              </label>
+
+              <label>
+                Nationality
+                <input id="nationality" name="nationality" type="text" required />
+              </label>
+            </div>
+
+            <label>
+              Document Number (optional)
+              <input id="documentNumber" name="documentNumber" type="text" maxlength="40" />
+              <span class="hint">If left blank, a unique number will be generated automatically.</span>
+            </label>
+
+            <div class="actions">
+              <button id="generateBtn" type="submit">Generate PDF</button>
+              <a id="downloadLink" class="download-link" download="document.pdf">Download PDF</a>
+            </div>
+
+            <p id="status" class="status" aria-live="polite"></p>
+          </form>
+
+          <div class="meta">
+            <span>Verification URL pattern:</span>
+            <code id="verifyTemplate">https://verify.example.com/doc/...</code>
+          </div>
+        </article>
+
+        <article class="card">
+          <iframe id="previewFrame" class="preview-frame" title="PDF Preview"></iframe>
+        </article>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+    <script>
+      (() => {
+        const { jsPDF } = window.jspdf;
+
+        const form = document.getElementById('docForm');
+        const generateBtn = document.getElementById('generateBtn');
+        const statusEl = document.getElementById('status');
+        const downloadLink = document.getElementById('downloadLink');
+        const previewFrame = document.getElementById('previewFrame');
+        const verifyTemplate = document.getElementById('verifyTemplate');
+
+        const verificationBaseUrl = `${window.location.origin}/verify`;
+        verifyTemplate.textContent = `${verificationBaseUrl}?documentNumber=...`;
+
+        let activePdfUrl = '';
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          setStatus('Generating PDF...', '');
+
+          const formData = new FormData(form);
+          const fullName = String(formData.get('fullName') || '').trim();
+          const age = String(formData.get('age') || '').trim();
+          const nationality = String(formData.get('nationality') || '').trim();
+          let documentNumber = String(formData.get('documentNumber') || '').trim();
+
+          const validationError = validateInput({ fullName, age, nationality, documentNumber });
+          if (validationError) {
+            setStatus(validationError, 'error');
+            return;
+          }
+
+          if (!documentNumber) {
+            documentNumber = generateDocumentNumber();
+            form.documentNumber.value = documentNumber;
+          }
+
+          generateBtn.disabled = true;
+          downloadLink.classList.remove('ready');
+
+          try {
+            const verificationUrl = `${verificationBaseUrl}?documentNumber=${encodeURIComponent(
+              documentNumber
+            )}`;
+
+            const pdfBlob = await buildPdf({
+              fullName,
+              age,
+              nationality,
+              documentNumber,
+              verificationUrl
+            });
+
+            updatePdfPreview(pdfBlob, documentNumber);
+            setStatus('PDF ready. You can preview and download now.', 'success');
+          } catch (error) {
+            console.error(error);
+            setStatus('Failed to generate PDF. Please try again.', 'error');
+          } finally {
+            generateBtn.disabled = false;
+          }
+        });
+
+        function validateInput({ fullName, age, nationality, documentNumber }) {
+          if (!fullName) {
+            return 'Full Name is required.';
+          }
+
+          if (!age) {
+            return 'Age is required.';
+          }
+
+          const parsedAge = Number(age);
+          if (!Number.isFinite(parsedAge) || parsedAge < 1 || parsedAge > 120) {
+            return 'Age must be a valid number between 1 and 120.';
+          }
+
+          if (!nationality) {
+            return 'Nationality is required.';
+          }
+
+          if (documentNumber && !/^[A-Za-z0-9\-_/]{4,40}$/.test(documentNumber)) {
+            return 'Document Number may contain letters, numbers, -, _, / and be 4-40 chars long.';
+          }
+
+          return '';
+        }
+
+        function generateDocumentNumber() {
+          const now = new Date();
+          const datePart = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(
+            now.getDate()
+          ).padStart(2, '0')}`;
+          const randomPart = Math.random().toString(36).slice(2, 8).toUpperCase();
+          return `DOC-${datePart}-${randomPart}`;
+        }
+
+        async function buildPdf({ fullName, age, nationality, documentNumber, verificationUrl }) {
+          const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+          const pageWidth = 210;
+          const margin = 20;
+
+          doc.setFillColor(15, 23, 42);
+          doc.rect(0, 0, pageWidth, 33, 'F');
+
+          doc.setTextColor(255, 255, 255);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(18);
+          doc.text('Professional Document Certificate', margin, 16);
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Generated digitally with verification QR code', margin, 24);
+
+          doc.setTextColor(15, 23, 42);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(12);
+          doc.text('Document Information', margin, 48);
+
+          doc.setDrawColor(203, 213, 225);
+          doc.roundedRect(margin, 54, 170, 92, 3, 3);
+
+          const rows = [
+            ['Full Name', fullName],
+            ['Age', String(age)],
+            ['Nationality', nationality],
+            ['Document Number', documentNumber],
+            ['Issue Date', new Date().toLocaleDateString()]
+          ];
+
+          let y = 67;
+          rows.forEach(([label, value]) => {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.text(`${label}:`, margin + 8, y);
+            doc.setFont('helvetica', 'normal');
+            doc.text(value, margin + 54, y);
+            y += 15;
+          });
+
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(71, 85, 105);
+          doc.setFontSize(10);
+          doc.text('Scan the QR code to verify this document online.', margin, 169);
+
+          const qrDataUrl = await QRCode.toDataURL(verificationUrl, {
+            errorCorrectionLevel: 'M',
+            margin: 1,
+            width: 300,
+            color: {
+              dark: '#0f172a',
+              light: '#ffffff'
+            }
+          });
+
+          doc.addImage(qrDataUrl, 'PNG', 150, 158, 40, 40, undefined, 'FAST');
+
+          doc.setFontSize(9);
+          doc.setTextColor(100, 116, 139);
+          const verificationText = `Verification URL: ${verificationUrl}`;
+          const wrapped = doc.splitTextToSize(verificationText, 166);
+          doc.text(wrapped, margin, 214);
+
+          doc.setDrawColor(226, 232, 240);
+          doc.line(margin, 248, 190, 248);
+          doc.setTextColor(71, 85, 105);
+          doc.text('Authorized by Digital Document Service', margin, 255);
+          doc.text(`Ref: ${documentNumber}`, 190, 255, { align: 'right' });
+
+          return doc.output('blob');
+        }
+
+        function updatePdfPreview(pdfBlob, documentNumber) {
+          if (activePdfUrl) {
+            URL.revokeObjectURL(activePdfUrl);
+          }
+
+          activePdfUrl = URL.createObjectURL(pdfBlob);
+          previewFrame.src = activePdfUrl;
+
+          downloadLink.href = activePdfUrl;
+          downloadLink.download = `${documentNumber}.pdf`;
+          downloadLink.classList.add('ready');
+        }
+
+        function setStatus(message, type) {
+          statusEl.textContent = message;
+          statusEl.classList.remove('error', 'success');
+          if (type) {
+            statusEl.classList.add(type);
+          }
+        }
+
+        window.addEventListener('beforeunload', () => {
+          if (activePdfUrl) {
+            URL.revokeObjectURL(activePdfUrl);
+          }
+        });
+      })();
+    </script>
+  </body>
 </html>
